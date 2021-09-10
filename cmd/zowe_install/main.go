@@ -56,8 +56,7 @@ func DownloadPax(url string, file string) error {
 
 func ExtractPax(pax string) error {
 	workDir := filepath.Dir(pax)
-	command := fmt.Sprintf("pax -rvf  %s", pax)
-	cmd := exec.Command(command)
+	cmd := exec.Command("pax", "-rvf", pax)
 	cmd.Dir = workDir
 	err := cmd.Run()
 	if err != nil {
