@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -53,6 +54,18 @@ func DownloadPax(url string, file string) error {
 	return nil
 }
 
+func ExtractPax(pax string) error {
+	workDir := filepath.Dir(pax)
+	command := fmt.Sprintf("pax -rvf  %s", pax)
+	cmd := exec.Command(command)
+	cmd.Dir = workDir
+	err := cmd.Run()
+	if err != nil {
+		return errors.Wrapf(err, "failed to extract pax")
+	}
+	return nil
+}
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Printf("Usage: %s <Zowe PAX URL>\n", filepath.Base(os.Args[0]))
@@ -68,9 +81,24 @@ func main() {
 	ext := path.Ext(paxFile)
 	dir := strings.TrimSuffix(paxFile, ext)
 	fmt.Println(paxFile, dir, ext)
-
-	err = DownloadPax(paxURL, paxFile)
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
+		log.Fatalf("failed to get user home dir: %v\n", err)
+	}
+
+	targetDir := filepath.Join(homeDir, dir)
+	if err := os.RemoveAll(targetDir); err != nil {
+		log.Fatalf("failed to cleanup installation dir: %v", err)
+	}
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		log.Fatalf("failed to create directory for installation: %v", err)
+	}
+	targetPax := filepath.Join(targetDir, paxFile)
+
+	if err := DownloadPax(paxURL, targetPax); err != nil {
+		log.Fatal(err)
+	}
+	if err := ExtractPax(targetPax); err != nil {
 		log.Fatal(err)
 	}
 }
