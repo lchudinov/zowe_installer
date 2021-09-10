@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"os/user"
 	"path"
 	"path/filepath"
 	"strings"
@@ -65,6 +66,43 @@ func ExtractPax(pax string) error {
 	return nil
 }
 
+/*
+folder="${dir:0:11}"
+
+if [ ! -d "${folder}" ]; then
+  echo "${folder} not found"
+  exit 1
+fi
+
+cd "${folder}/install" || exit 1
+
+export ROOT_DIR="${HOME}/${dir}/root"
+./zowe-install.sh -i "${ROOT_DIR}" -h "${USER}" || exit 1
+
+*/
+
+func InstallPax(pax string) error {
+	dir := filepath.Dir(pax)
+	folder := filepath.Base(dir)[0:11]
+	installDir := filepath.Join(dir, folder, "install")
+	if _, err := os.Stat(installDir); err != nil {
+		return errors.Wrapf(err, "failed to find install dir %s: %v", installDir)
+	}
+	rootDir := filepath.Join(dir, "root")
+	user, err := user.Current()
+	if err != nil {
+		return errors.Wrapf(err, "failed to get current user")
+	}
+	cmd := exec.Command("./zowe-install.sh", "-i", rootDir, "-h", user.Username)
+	cmd.Dir = installDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return errors.Wrapf(err, "failed to install zowe pax")
+	}
+	return nil
+}
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Printf("Usage: %s <Zowe PAX URL>\n", filepath.Base(os.Args[0]))
@@ -98,6 +136,9 @@ func main() {
 		log.Fatal(err)
 	}
 	if err := ExtractPax(targetPax); err != nil {
+		log.Fatal(err)
+	}
+	if err := InstallPax(targetPax); err != nil {
 		log.Fatal(err)
 	}
 }
