@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -39,7 +40,7 @@ func (launcher *Launcher) findRootDir() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to run %s", command)
 	}
-	rootDir := string(buf)
+	rootDir := strings.TrimSuffix(string(buf), "\n")
 	if _, err := os.Stat(rootDir); err != nil {
 		return errors.Wrapf(err, "failed to find ROOT_DIR %s", rootDir)
 	}
