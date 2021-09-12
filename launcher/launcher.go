@@ -32,7 +32,7 @@ func (launcher *Launcher) Run(instanceDir string, haInstanceId string) error {
 
 func (launcher *Launcher) findRootDir() error {
 	command := fmt.Sprintf(". %s/bin/internal/read-essential-vars.sh && echo $ROOT_DIR", launcher.instanceDir)
-	cmd := exec.Command("/bin/sh -c", command)
+	cmd := exec.Command("/bin/sh", "-c", command)
 	buf, err := cmd.Output()
 	if err != nil {
 		return errors.Wrapf(err, "failed to run %s", command)
