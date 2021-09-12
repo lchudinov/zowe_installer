@@ -85,6 +85,7 @@ func (installer *ZoweInstaller) PrepareInstallation(paxURL string) error {
 		return errors.Wrapf(err, "failed to create directory for installation")
 	}
 	installer.paxFileName = filepath.Join(installer.dir, paxFile)
+	installer.paxURL = paxURL
 	return nil
 }
 
