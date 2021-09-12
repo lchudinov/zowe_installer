@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 4 {
+	if len(os.Args) != 3 {
 		fmt.Printf("Usage: %s INSTANCE_DIR HA_INSTANCE_ID\n", filepath.Base(os.Args[0]))
 		os.Exit(1)
 	}
