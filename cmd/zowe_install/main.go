@@ -103,6 +103,41 @@ func InstallPax(pax string) error {
 	return nil
 }
 
+/*
+export INSTANCE_DIR="${HOME}/${dir}/instance"
+mkdir -p "${INSTANCE_DIR}" || exit 1
+echo "Configuring instance.."
+cd "${ROOT_DIR}/bin" && ./zowe-configure-instance.sh -c "${INSTANCE_DIR}" -g PDUSER || exit 1
+
+*/
+
+func InitInstance(pax string) error {
+	dir := filepath.Dir(pax)
+	instanceDir := filepath.Join(dir, "instance")
+	if err := os.Mkdir(instanceDir, 0755); err != nil {
+		return errors.Wrapf(err, "failed to create instance dir %s", instanceDir)
+	}
+	log.Printf("Configuring instance..")
+	rootDir := filepath.Join(dir, "root")
+	userInfo, err := user.Current()
+	if err != nil {
+		return errors.Wrapf(err, "failed to get current user")
+	}
+	rootBinDir := filepath.Join(rootDir, "bin")
+	groupInfo, err := user.LookupGroupId(userInfo.Gid)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get group name for user %s", userInfo.Name)
+	}
+	cmd := exec.Command("./zowe-configure-instance.sh", "-c", instanceDir, "-g", groupInfo.Name)
+	cmd.Dir = rootBinDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return errors.Wrapf(err, "failed to configure instance")
+	}
+	return nil
+}
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Printf("Usage: %s <Zowe PAX URL>\n", filepath.Base(os.Args[0]))
@@ -139,6 +174,9 @@ func main() {
 		log.Fatal(err)
 	}
 	if err := InstallPax(targetPax); err != nil {
+		log.Fatal(err)
+	}
+	if err := InitInstance(targetPax); err != nil {
 		log.Fatal(err)
 	}
 }
