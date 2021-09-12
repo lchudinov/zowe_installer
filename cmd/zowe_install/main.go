@@ -85,6 +85,7 @@ func (installer *ZoweInstaller) PrepareInstallation(paxURL string) error {
 		return errors.Wrapf(err, "failed to create directory for installation")
 	}
 	installer.paxFileName = filepath.Join(installer.dir, paxFile)
+	installer.paxURL = paxURL
 	return nil
 }
 
@@ -149,111 +150,6 @@ func (installer *ZoweInstaller) InstallPax() error {
 
 func (installer *ZoweInstaller) InitInstance() error {
 	dir := installer.dir
-	instanceDir := filepath.Join(dir, "instance")
-	if err := os.Mkdir(instanceDir, 0755); err != nil {
-		return errors.Wrapf(err, "failed to create instance dir %s", instanceDir)
-	}
-	log.Printf("Configuring instance..")
-	rootDir := filepath.Join(dir, "root")
-	userInfo, err := user.Current()
-	if err != nil {
-		return errors.Wrapf(err, "failed to get current user")
-	}
-	rootBinDir := filepath.Join(rootDir, "bin")
-	groupInfo, err := user.LookupGroupId(userInfo.Gid)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get group name for user %s", userInfo.Name)
-	}
-	cmd := exec.Command("./zowe-configure-instance.sh", "-c", instanceDir, "-g", groupInfo.Name)
-	cmd.Dir = rootBinDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return errors.Wrapf(err, "failed to configure instance")
-	}
-	return nil
-}
-
-func DownloadPax(url string, file string) error {
-	out, err := os.Create(file)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create file")
-	}
-	defer out.Close()
-	resp, err := http.Get(url)
-	if err != nil {
-		return errors.Wrapf(err, "failed to download file")
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.Errorf("failed to download file")
-	}
-	defer resp.Body.Close()
-	var counter ByteCounter
-	_, err = io.Copy(out, io.TeeReader(resp.Body, &counter))
-	if err != nil {
-		return errors.Wrapf(err, "failed to download file")
-	}
-	return nil
-}
-
-func ExtractPax(pax string) error {
-	workDir := filepath.Dir(pax)
-	cmd := exec.Command("pax", "-rvf", pax)
-	cmd.Dir = workDir
-	err := cmd.Run()
-	if err != nil {
-		return errors.Wrapf(err, "failed to extract pax")
-	}
-	return nil
-}
-
-/*
-folder="${dir:0:11}"
-
-if [ ! -d "${folder}" ]; then
-  echo "${folder} not found"
-  exit 1
-fi
-
-cd "${folder}/install" || exit 1
-
-export ROOT_DIR="${HOME}/${dir}/root"
-./zowe-install.sh -i "${ROOT_DIR}" -h "${USER}" || exit 1
-
-*/
-
-func InstallPax(pax string) error {
-	dir := filepath.Dir(pax)
-	folder := filepath.Base(dir)[0:11]
-	installDir := filepath.Join(dir, folder, "install")
-	if _, err := os.Stat(installDir); err != nil {
-		return errors.Wrapf(err, "failed to find install dir %s: %v", installDir)
-	}
-	rootDir := filepath.Join(dir, "root")
-	user, err := user.Current()
-	if err != nil {
-		return errors.Wrapf(err, "failed to get current user")
-	}
-	cmd := exec.Command("./zowe-install.sh", "-i", rootDir, "-h", user.Username)
-	cmd.Dir = installDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return errors.Wrapf(err, "failed to install zowe pax")
-	}
-	return nil
-}
-
-/*
-export INSTANCE_DIR="${HOME}/${dir}/instance"
-mkdir -p "${INSTANCE_DIR}" || exit 1
-echo "Configuring instance.."
-cd "${ROOT_DIR}/bin" && ./zowe-configure-instance.sh -c "${INSTANCE_DIR}" -g PDUSER || exit 1
-
-*/
-
-func InitInstance(pax string) error {
-	dir := filepath.Dir(pax)
 	instanceDir := filepath.Join(dir, "instance")
 	if err := os.Mkdir(instanceDir, 0755); err != nil {
 		return errors.Wrapf(err, "failed to create instance dir %s", instanceDir)
