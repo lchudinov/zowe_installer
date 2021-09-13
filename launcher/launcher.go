@@ -63,7 +63,9 @@ func (launcher *Launcher) getLaunchComponents() error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to run %s", script)
 	}
-	launcher.launchComponents = strings.Split(strings.TrimSuffix(string(output), "\n"), ",")
+	list := strings.TrimSuffix(string(output), "\n")
+	list = strings.TrimSuffix(list, ",")
+	launcher.launchComponents = strings.Split(list, ",")
 	if len(launcher.launchComponents) == 0 {
 		return errors.New("no launch components")
 	}
