@@ -69,6 +69,6 @@ func (launcher *Launcher) getLaunchComponents() error {
 	if len(launcher.launchComponents) == 0 {
 		return errors.New("no launch components")
 	}
-	log.Printf("LAUNCH COMPONENTS: %s", strings.Join(launcher.launchComponents, ","))
+	log.Printf("LAUNCH COMPONENTS = %s", strings.Join(launcher.launchComponents, ","))
 	return nil
 }
