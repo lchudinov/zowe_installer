@@ -40,6 +40,9 @@ func (launcher *Launcher) Run(instanceDir string, haInstanceId string) error {
 	if err := launcher.initComponents(); err != nil {
 		return errors.Wrapf(err, "failed to init components")
 	}
+	if err := launcher.startComponents(); err != nil {
+		return errors.Wrap(err, "failed to start components")
+	}
 	return nil
 }
 
@@ -75,9 +78,6 @@ func (launcher *Launcher) getLaunchComponents() error {
 		return errors.New("no launch components")
 	}
 	log.Printf("LAUNCH COMPONENTS = %s", strings.Join(launcher.launchComponents, ","))
-	if err := launcher.startComponents(); err != nil {
-		return errors.Wrap(err, "failed to start components")
-	}
 	return nil
 }
 
@@ -90,6 +90,9 @@ func (launcher *Launcher) initComponents() error {
 
 func (launcher *Launcher) startComponents() error {
 	for name, comp := range launcher.components {
+		if name != "zss" && name != "app-server" {
+			continue
+		}
 		if err := launcher.startComponent(comp); err != nil {
 			return errors.Wrapf(err, "failed to start component %s", name)
 		}
