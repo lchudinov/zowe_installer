@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/pkg/errors"
 )
@@ -33,6 +34,9 @@ func (launcher *Launcher) Run(instanceDir string, haInstanceId string) error {
 	}
 	if err := launcher.findRootDir(); err != nil {
 		return errors.Wrapf(err, "failed to find ROOT_DIR")
+	}
+	if err := launcher.prepareInstance(); err != nil {
+		return errors.Wrapf(err, "failed to prepare instance")
 	}
 	if err := launcher.getLaunchComponents(); err != nil {
 		return errors.Wrapf(err, "failed to find launch components")
@@ -81,6 +85,17 @@ func (launcher *Launcher) getLaunchComponents() error {
 	return nil
 }
 
+func (launcher *Launcher) prepareInstance() error {
+	log.Printf("preparing instance...")
+	script := filepath.Join(launcher.rootDir, "bin", "internal", "prepare-instance.sh")
+	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId)
+	if err := cmd.Run(); err != nil {
+		return errors.Wrapf(err, "failed to run %s", script)
+	}
+	log.Printf("instance prepared")
+	return nil
+}
+
 func (launcher *Launcher) initComponents() error {
 	for _, name := range launcher.launchComponents {
 		launcher.components[name] = NewComponent(name)
@@ -106,6 +121,9 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId, "-o", comp.Name)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	var attr syscall.SysProcAttr
+	attr.Setpgid = true
+	cmd.SysProcAttr = &attr
 	if err := cmd.Start(); err != nil {
 		return errors.Wrapf(err, "failed to run component %s", comp.Name)
 	}
