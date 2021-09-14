@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/pkg/errors"
@@ -18,11 +19,13 @@ type Launcher struct {
 	haInstanceId     string
 	launchComponents []string
 	components       map[string]*Component
+	wg               *sync.WaitGroup
 }
 
 func New() *Launcher {
 	var launcher Launcher
 	launcher.components = make(map[string]*Component)
+	launcher.wg = new(sync.WaitGroup)
 	return &launcher
 }
 
@@ -47,6 +50,8 @@ func (launcher *Launcher) Run(instanceDir string, haInstanceId string) error {
 	if err := launcher.startComponents(); err != nil {
 		return errors.Wrap(err, "failed to start components")
 	}
+	launcher.wg.Wait()
+	log.Printf("components stopped")
 	return nil
 }
 
@@ -133,5 +138,12 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 	}
 	comp.cmd = cmd
 	log.Printf("component %s started", comp.Name)
+	launcher.wg.Add(1)
+	go func() {
+		defer launcher.wg.Done()
+		if _, err := cmd.Process.Wait(); err != nil {
+			log.Printf("component stopped with error: %v", err)
+		}
+	}()
 	return nil
 }
