@@ -89,6 +89,7 @@ func (launcher *Launcher) prepareInstance() error {
 	log.Printf("preparing instance...")
 	script := filepath.Join(launcher.rootDir, "bin", "internal", "prepare-instance.sh")
 	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId)
+	cmd.Dir = launcher.instanceDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -121,6 +122,7 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 	log.Printf("starting component %s...", comp.Name)
 	script := filepath.Join(launcher.rootDir, "bin", "internal", "start-component.sh")
 	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId, "-o", comp.Name)
+	cmd.Dir = launcher.instanceDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	var attr syscall.SysProcAttr
