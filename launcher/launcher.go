@@ -89,6 +89,8 @@ func (launcher *Launcher) prepareInstance() error {
 	log.Printf("preparing instance...")
 	script := filepath.Join(launcher.rootDir, "bin", "internal", "prepare-instance.sh")
 	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		return errors.Wrapf(err, "failed to run %s", script)
 	}
