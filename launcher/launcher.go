@@ -50,9 +50,12 @@ func (launcher *Launcher) Run(instanceDir string, haInstanceId string) error {
 	if err := launcher.startComponents(); err != nil {
 		return errors.Wrap(err, "failed to start components")
 	}
+	return nil
+}
+
+func (launcher *Launcher) Wait() {
 	launcher.wg.Wait()
 	log.Printf("components stopped")
-	return nil
 }
 
 func (launcher *Launcher) findRootDir() error {
@@ -146,4 +149,21 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 		}
 	}()
 	return nil
+}
+
+func (launcher *Launcher) stopComponent(comp *Component) error {
+	if comp.cmd != nil && !comp.cmd.ProcessState.Exited() {
+		if err := syscall.Kill(-comp.cmd.Process.Pid, syscall.SIGKILL); err != nil {
+			return errors.Wrapf(err, "failed to kill component %s", comp.Name)
+		}
+	}
+	return nil
+}
+
+func (launcher *Launcher) StopComponents() {
+	for name, comp := range launcher.components {
+		if err := launcher.stopComponent(comp); err != nil {
+			log.Printf("failed to stop component %s: %v", name, err)
+		}
+	}
 }
