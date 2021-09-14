@@ -16,10 +16,12 @@ type Launcher struct {
 	instanceDir      string
 	haInstanceId     string
 	launchComponents []string
+	components       map[string]*Component
 }
 
 func New() *Launcher {
 	var launcher Launcher
+	launcher.components = make(map[string]*Component)
 	return &launcher
 }
 
@@ -34,6 +36,9 @@ func (launcher *Launcher) Run(instanceDir string, haInstanceId string) error {
 	}
 	if err := launcher.getLaunchComponents(); err != nil {
 		return errors.Wrapf(err, "failed to find launch components")
+	}
+	if err := launcher.initComponents(); err != nil {
+		return errors.Wrapf(err, "failed to init components")
 	}
 	return nil
 }
@@ -70,5 +75,38 @@ func (launcher *Launcher) getLaunchComponents() error {
 		return errors.New("no launch components")
 	}
 	log.Printf("LAUNCH COMPONENTS = %s", strings.Join(launcher.launchComponents, ","))
+	if err := launcher.startComponents(); err != nil {
+		return errors.Wrap(err, "failed to start components")
+	}
+	return nil
+}
+
+func (launcher *Launcher) initComponents() error {
+	for _, name := range launcher.launchComponents {
+		launcher.components[name] = NewComponent(name)
+	}
+	return nil
+}
+
+func (launcher *Launcher) startComponents() error {
+	for name, comp := range launcher.components {
+		if err := launcher.startComponent(comp); err != nil {
+			return errors.Wrapf(err, "failed to start component %s", name)
+		}
+	}
+	return nil
+}
+
+func (launcher *Launcher) startComponent(comp *Component) error {
+	log.Printf("starting component %s...", comp.Name)
+	script := filepath.Join(launcher.rootDir, "bin", "internal", "start-component.sh")
+	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId, "-o", comp.Name)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		return errors.Wrapf(err, "failed to run component %s", comp.Name)
+	}
+	comp.cmd = cmd
+	log.Printf("component %s started", comp.Name)
 	return nil
 }
