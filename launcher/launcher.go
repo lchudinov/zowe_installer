@@ -152,8 +152,9 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 }
 
 func (launcher *Launcher) stopComponent(comp *Component) error {
-	if comp.cmd != nil && !comp.cmd.ProcessState.Exited() {
-		if err := syscall.Kill(-comp.cmd.Process.Pid, syscall.SIGKILL); err != nil {
+	if comp.cmd != nil {
+		log.Printf("stopping component %s...", comp.Name)
+		if err := comp.cmd.Process.Kill(); err != nil {
 			return errors.Wrapf(err, "failed to kill component %s", comp.Name)
 		}
 	}
@@ -161,6 +162,7 @@ func (launcher *Launcher) stopComponent(comp *Component) error {
 }
 
 func (launcher *Launcher) StopComponents() {
+	log.Printf("stopping components...")
 	for name, comp := range launcher.components {
 		if err := launcher.stopComponent(comp); err != nil {
 			log.Printf("failed to stop component %s: %v", name, err)
