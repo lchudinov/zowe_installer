@@ -154,7 +154,7 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 func (launcher *Launcher) stopComponent(comp *Component) error {
 	if comp.cmd != nil {
 		log.Printf("stopping component %s...", comp.Name)
-		if err := syscall.Kill(-comp.cmd.Process.Pid, syscall.SIGKILL); err != nil {
+		if err := syscall.Kill(-comp.cmd.Process.Pid, syscall.SIGTERM); err != nil {
 			return errors.Wrapf(err, "failed to kill component %s", comp.Name)
 		}
 	}
