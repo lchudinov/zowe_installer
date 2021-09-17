@@ -20,6 +20,7 @@ type Launcher struct {
 	launchComponents []string
 	components       map[string]*Component
 	wg               *sync.WaitGroup
+	env              []string
 }
 
 func New() *Launcher {
@@ -38,6 +39,7 @@ func (launcher *Launcher) Run(instanceDir string, haInstanceId string) error {
 	if err := launcher.findRootDir(); err != nil {
 		return errors.Wrapf(err, "failed to find ROOT_DIR")
 	}
+	launcher.env = launcher.makeEnvironment()
 	if err := launcher.prepareInstance(); err != nil {
 		return errors.Wrapf(err, "failed to prepare instance")
 	}
@@ -76,9 +78,17 @@ func (launcher *Launcher) findRootDir() error {
 	return nil
 }
 
+func (launcher *Launcher) makeEnvironment() []string {
+	env := os.Environ()
+	env = append(env, fmt.Sprintf("INSTANCE_DIR=%s", launcher.instanceDir))
+	env = append(env, fmt.Sprintf("ROOT_DIR=%s", launcher.rootDir))
+	return env
+}
+
 func (launcher *Launcher) getLaunchComponents() error {
 	script := filepath.Join(launcher.rootDir, "bin", "internal", "get-launch-components.sh")
 	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId)
+	cmd.Env = launcher.env
 	output, err := cmd.Output()
 	if err != nil {
 		return errors.Wrapf(err, "failed to run %s", script)
@@ -97,6 +107,7 @@ func (launcher *Launcher) prepareInstance() error {
 	log.Printf("preparing instance...")
 	script := filepath.Join(launcher.rootDir, "bin", "internal", "prepare-instance.sh")
 	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId)
+	cmd.Env = launcher.env
 	cmd.Dir = launcher.instanceDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -130,6 +141,7 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 	log.Printf("starting component %s...", comp.Name)
 	script := filepath.Join(launcher.rootDir, "bin", "internal", "start-component.sh")
 	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId, "-o", comp.Name)
+	cmd.Env = launcher.env
 	cmd.Dir = launcher.instanceDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
