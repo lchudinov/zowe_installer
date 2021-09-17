@@ -65,6 +65,7 @@ func (launcher *Launcher) findRootDir() error {
 	cmd := exec.Command("/bin/sh", "-c", command)
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("INSTANCE_DIR=%s", launcher.instanceDir))
+	cmd.Dir = launcher.instanceDir
 	buf, err := cmd.Output()
 	if err != nil {
 		return errors.Wrapf(err, "failed to run %s", command)
