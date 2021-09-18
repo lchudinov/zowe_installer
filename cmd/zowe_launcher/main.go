@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -33,5 +34,7 @@ func main() {
 		log.Fatalf("failed to run Zowe: %v", err)
 	}
 	setupInterrutHandler(launcher)
+	http.Handle("/", launcher)
+	http.ListenAndServe(":8053", nil)
 	launcher.Wait()
 }

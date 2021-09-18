@@ -1,8 +1,11 @@
 package launcher
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,6 +24,7 @@ type Launcher struct {
 	components       map[string]*Component
 	wg               *sync.WaitGroup
 	env              []string
+	output           bytes.Buffer
 }
 
 func New() *Launcher {
@@ -144,8 +148,8 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId, "-o", comp.Name)
 	cmd.Env = launcher.env
 	cmd.Dir = launcher.instanceDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = io.MultiWriter(os.Stdout, &comp.output)
+	cmd.Stderr = io.MultiWriter(os.Stderr, &comp.output)
 	var attr syscall.SysProcAttr
 	attr.Setpgid = true
 	cmd.SysProcAttr = &attr
@@ -180,5 +184,11 @@ func (launcher *Launcher) StopComponents() {
 		if err := launcher.stopComponent(comp); err != nil {
 			log.Printf("failed to stop component %s: %v", name, err)
 		}
+	}
+}
+
+func (launcher *Launcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	for _, comp := range launcher.components {
+		fmt.Fprintf(w, "---\n%s\n----%s\n", comp.Name, string(comp.output.Bytes()))
 	}
 }
