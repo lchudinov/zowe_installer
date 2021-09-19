@@ -25,12 +25,14 @@ type Launcher struct {
 	wg               *sync.WaitGroup
 	env              []string
 	output           bytes.Buffer
+	Server           *http.Server
 }
 
 func New() *Launcher {
 	var launcher Launcher
 	launcher.components = make(map[string]*Component)
 	launcher.wg = new(sync.WaitGroup)
+	launcher.Server = &http.Server{Addr: ":8053", Handler: &launcher}
 	return &launcher
 }
 

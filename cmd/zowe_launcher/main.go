@@ -1,9 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -19,6 +19,7 @@ func setupInterrutHandler(launcher *launcher.Launcher) {
 			launcher.StopComponents()
 			break
 		}
+		launcher.Server.Shutdown(context.Background())
 	}()
 }
 
@@ -34,7 +35,10 @@ func main() {
 		log.Fatalf("failed to run Zowe: %v", err)
 	}
 	setupInterrutHandler(launcher)
-	http.Handle("/", launcher)
-	http.ListenAndServe(":8053", nil)
+	go func() {
+		if err := launcher.Server.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 	launcher.Wait()
 }
