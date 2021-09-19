@@ -2,6 +2,7 @@ package launcher
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -25,7 +26,7 @@ type Launcher struct {
 	wg               *sync.WaitGroup
 	env              []string
 	output           bytes.Buffer
-	Server           *http.Server
+	*http.Server
 }
 
 func New() *Launcher {
@@ -187,6 +188,11 @@ func (launcher *Launcher) StopComponents() {
 			log.Printf("failed to stop component %s: %v", name, err)
 		}
 	}
+}
+
+func (launcher *Launcher) Stop() {
+	launcher.Shutdown(context.Background())
+	launcher.StopComponents()
 }
 
 func (launcher *Launcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {

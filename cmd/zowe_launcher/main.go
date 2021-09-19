@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -16,10 +15,9 @@ func setupInterrutHandler(launcher *launcher.Launcher) {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for range c {
-			launcher.StopComponents()
+			launcher.Stop()
 			break
 		}
-		launcher.Server.Shutdown(context.Background())
 	}()
 }
 
@@ -36,7 +34,7 @@ func main() {
 	}
 	setupInterrutHandler(launcher)
 	go func() {
-		if err := launcher.Server.ListenAndServe(); err != nil {
+		if err := launcher.ListenAndServe(); err != nil {
 			log.Fatal(err)
 		}
 	}()
