@@ -3,6 +3,7 @@ package launcher
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -196,11 +197,20 @@ func (launcher *Launcher) Stop() {
 }
 
 func (launcher *Launcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	urlParts := strings.Split(r.URL.Path, "/")
-	//firstPart := urlParts[1]
-	//secondPart := urlParts[2]
-	fmt.Fprintf(w, "urlParts = %#v\n", urlParts)
-	for _, comp := range launcher.components {
-		fmt.Fprintf(w, "---\n%s\n----%s\n", comp.Name, string(comp.output.Bytes()))
+	urlParts := strings.Split(r.URL.Path, "/")[1:]
+	urlPartCount := len(urlParts)
+	lastPart := urlParts[urlPartCount-1]
+	if lastPart == "" {
+		urlParts = urlParts[:urlPartCount-1]
+	}
+	switch urlParts[0] {
+	case "components":
+		data, _ := json.Marshal(launcher.components)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
+	default:
+		for _, comp := range launcher.components {
+			fmt.Fprintf(w, "---\n%s\n----%s\n", comp.Name, string(comp.output.Bytes()))
+		}
 	}
 }
