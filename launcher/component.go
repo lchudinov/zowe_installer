@@ -6,7 +6,7 @@ import (
 )
 
 type Component struct {
-	Name   string
+	Name   string `json:"name"`
 	cmd    *exec.Cmd
 	output bytes.Buffer
 }

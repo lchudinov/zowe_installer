@@ -205,7 +205,11 @@ func (launcher *Launcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	switch urlParts[0] {
 	case "components":
-		data, _ := json.Marshal(launcher.components)
+		var comps []*Component
+		for _, comp := range launcher.components {
+			comps = append(comps, comp)
+		}
+		data, _ := json.Marshal(comps)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
 	default:
