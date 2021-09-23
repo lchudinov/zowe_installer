@@ -199,7 +199,7 @@ func (launcher *Launcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	urlParts := strings.Split(r.URL.Path, "/")
 	//firstPart := urlParts[1]
 	//secondPart := urlParts[2]
-	fmt.Fprintf(w, "urlParts = %v\n", urlParts)
+	fmt.Fprintf(w, "urlParts = %#v\n", urlParts)
 	for _, comp := range launcher.components {
 		fmt.Fprintf(w, "---\n%s\n----%s\n", comp.Name, string(comp.output.Bytes()))
 	}
