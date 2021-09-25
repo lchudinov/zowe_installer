@@ -13,8 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"syscall"
 
+	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
 
@@ -28,13 +28,18 @@ type Launcher struct {
 	env              []string
 	output           bytes.Buffer
 	*http.Server
+	router *mux.Router
 }
 
 func New() *Launcher {
 	var launcher Launcher
 	launcher.components = make(map[string]*Component)
 	launcher.wg = new(sync.WaitGroup)
-	launcher.Server = &http.Server{Addr: ":8053", Handler: &launcher}
+	launcher.router = mux.NewRouter()
+	launcher.Server = &http.Server{
+		Addr:    ":8053",
+		Handler: &launcher,
+	}
 	return &launcher
 }
 
@@ -154,9 +159,7 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 	cmd.Dir = launcher.instanceDir
 	cmd.Stdout = io.MultiWriter(os.Stdout, &comp.output)
 	cmd.Stderr = io.MultiWriter(os.Stderr, &comp.output)
-	var attr syscall.SysProcAttr
-	attr.Setpgid = true
-	cmd.SysProcAttr = &attr
+	cmd.SysProcAttr = getSysProcAttr()
 	if err := cmd.Start(); err != nil {
 		return errors.Wrapf(err, "failed to run component %s", comp.Name)
 	}
@@ -175,7 +178,7 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 func (launcher *Launcher) stopComponent(comp *Component) error {
 	if comp.cmd != nil {
 		log.Printf("stopping component %s...", comp.Name)
-		if err := syscall.Kill(-comp.cmd.Process.Pid, syscall.SIGTERM); err != nil {
+		if err := kill(-comp.cmd.Process.Pid); err != nil {
 			return errors.Wrapf(err, "failed to kill component %s", comp.Name)
 		}
 	}
