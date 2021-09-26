@@ -1,6 +1,7 @@
 package launcher
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -243,7 +244,15 @@ func (launcher *Launcher) handleComponentLog(w http.ResponseWriter, r *http.Requ
 	vars := mux.Vars(r)
 	name := vars["comp"]
 	if comp, ok := launcher.components[name]; ok {
-		data, _ := json.Marshal(comp.output.String())
+		var lines []string
+		scanner := bufio.NewScanner(&comp.output)
+		for scanner.Scan() {
+			lines = append(lines, scanner.Text())
+		}
+		if err := scanner.Err(); err != nil {
+			log.Printf("error reading componet output, %v", err)
+		}
+		data, _ := json.Marshal(lines)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
 	} else {
