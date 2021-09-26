@@ -165,8 +165,8 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId, "-o", comp.Name)
 	cmd.Env = launcher.env
 	cmd.Dir = launcher.instanceDir
-	cmd.Stdout = io.MultiWriter(os.Stdout, &comp.output)
-	cmd.Stderr = io.MultiWriter(os.Stderr, &comp.output)
+	cmd.Stdout = io.MultiWriter(os.Stdout, comp.output)
+	cmd.Stderr = io.MultiWriter(os.Stderr, comp.output)
 	cmd.SysProcAttr = getSysProcAttr()
 	if err := cmd.Start(); err != nil {
 		return errors.Wrapf(err, "failed to run component %s", comp.Name)
@@ -207,29 +207,6 @@ func (launcher *Launcher) Stop() {
 	launcher.StopComponents()
 }
 
-func (launcher *Launcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	urlParts := strings.Split(r.URL.Path, "/")[1:]
-	urlPartCount := len(urlParts)
-	lastPart := urlParts[urlPartCount-1]
-	if lastPart == "" {
-		urlParts = urlParts[:urlPartCount-1]
-	}
-	switch urlParts[0] {
-	case "components":
-		var comps []*Component
-		for _, comp := range launcher.components {
-			comps = append(comps, comp)
-		}
-		data, _ := json.Marshal(comps)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(data)
-	default:
-		for _, comp := range launcher.components {
-			fmt.Fprintf(w, "---\n%s\n----%s\n", comp.Name, string(comp.output.Bytes()))
-		}
-	}
-}
-
 func (launcher *Launcher) handleComponents(w http.ResponseWriter, r *http.Request) {
 	var comps []*Component
 	for _, comp := range launcher.components {
@@ -245,7 +222,7 @@ func (launcher *Launcher) handleComponentLog(w http.ResponseWriter, r *http.Requ
 	name := vars["comp"]
 	if comp, ok := launcher.components[name]; ok {
 		var lines []string
-		scanner := bufio.NewScanner(&comp.output)
+		scanner := bufio.NewScanner(strings.NewReader(comp.output.String()))
 		for scanner.Scan() {
 			lines = append(lines, scanner.Text())
 		}
