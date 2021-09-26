@@ -248,7 +248,7 @@ func (launcher *Launcher) handleComponentLog(w http.ResponseWriter, r *http.Requ
 		w.Write(data)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
-		writeError(w, "Component %s not found\n", name)
+		writeError(w, "Component '%s' not found", name)
 	}
 }
 
