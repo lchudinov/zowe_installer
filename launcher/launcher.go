@@ -46,6 +46,7 @@ func New() *Launcher {
 func (launcher *Launcher) makeRouter() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/components", launcher.handleComponents).Methods("GET")
+	router.HandleFunc("/component/{comp}/log", launcher.handleComponentLog).Methods("GET")
 	return router
 }
 
@@ -236,4 +237,18 @@ func (launcher *Launcher) handleComponents(w http.ResponseWriter, r *http.Reques
 	data, _ := json.Marshal(comps)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(data)
+}
+
+func (launcher *Launcher) handleComponentLog(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["comp"]
+	if comp, ok := launcher.components[name]; ok {
+		data, _ := json.Marshal(comp.output.String())
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(data)
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, "Component %s not found", name)
+	}
 }
