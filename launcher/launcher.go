@@ -35,12 +35,18 @@ func New() *Launcher {
 	var launcher Launcher
 	launcher.components = make(map[string]*Component)
 	launcher.wg = new(sync.WaitGroup)
-	launcher.router = mux.NewRouter()
+	launcher.router = launcher.makeRouter()
 	launcher.Server = &http.Server{
 		Addr:    ":8053",
-		Handler: &launcher,
+		Handler: launcher.router,
 	}
 	return &launcher
+}
+
+func (launcher *Launcher) makeRouter() *mux.Router {
+	router := mux.NewRouter()
+	router.HandleFunc("/components", launcher.handleComponents).Methods("GET")
+	return router
 }
 
 func (launcher *Launcher) Run(instanceDir string, haInstanceId string) error {
@@ -220,4 +226,14 @@ func (launcher *Launcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "---\n%s\n----%s\n", comp.Name, string(comp.output.Bytes()))
 		}
 	}
+}
+
+func (launcher *Launcher) handleComponents(w http.ResponseWriter, r *http.Request) {
+	var comps []*Component
+	for _, comp := range launcher.components {
+		comps = append(comps, comp)
+	}
+	data, _ := json.Marshal(comps)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
 }
