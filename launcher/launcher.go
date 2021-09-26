@@ -248,7 +248,17 @@ func (launcher *Launcher) handleComponentLog(w http.ResponseWriter, r *http.Requ
 		w.Write(data)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "Component %s not found", name)
+		writeError(w, "Component %s not found\n", name)
 	}
+}
+
+func writeError(w http.ResponseWriter, format string, a ...interface{}) {
+	type errorMessage struct {
+		Message string `json:"error"`
+	}
+	var msg errorMessage
+	msg.Message = fmt.Sprintf(format, a...)
+	data, _ := json.Marshal(msg)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
 }
