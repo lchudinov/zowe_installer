@@ -15,6 +15,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 )
@@ -37,9 +38,12 @@ func New() *Launcher {
 	launcher.components = make(map[string]*Component)
 	launcher.wg = new(sync.WaitGroup)
 	launcher.router = launcher.makeRouter()
+	credentials := handlers.AllowCredentials()
+	methods := handlers.AllowedMethods([]string{"POST,GET,DELETE,PUT"})
+	origins := handlers.AllowedOrigins([]string{"*"})
 	launcher.Server = &http.Server{
 		Addr:    ":8053",
-		Handler: launcher.router,
+		Handler: handlers.CORS(credentials, methods, origins)(launcher.router),
 	}
 	return &launcher
 }
