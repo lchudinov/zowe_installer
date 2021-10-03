@@ -52,6 +52,8 @@ func (launcher *Launcher) makeRouter() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/components", launcher.handleComponents).Methods("GET")
 	router.HandleFunc("/component/{comp}/log", launcher.handleComponentLog).Methods("GET")
+	router.HandleFunc("/component/{comp}/stop", launcher.handleComponentStop).Methods("POST")
+	router.HandleFunc("/component/{comp}/start", launcher.handleComponentStart).Methods("POST")
 	return router
 }
 
@@ -236,6 +238,33 @@ func (launcher *Launcher) handleComponentLog(w http.ResponseWriter, r *http.Requ
 		data, _ := json.Marshal(lines)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(data)
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+		writeError(w, "Component '%s' not found", name)
+	}
+}
+
+func (launcher *Launcher) handleComponentStop(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["comp"]
+	if comp, ok := launcher.components[name]; ok {
+		if err := launcher.stopComponent(comp); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			writeError(w, "Couldn't stop component '%s': %v", name, err)
+		}
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+		writeError(w, "Component '%s' not found", name)
+	}
+}
+func (launcher *Launcher) handleComponentStart(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["comp"]
+	if comp, ok := launcher.components[name]; ok {
+		if err := launcher.startComponent(comp); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			writeError(w, "Couldn't start component '%s': %v", name, err)
+		}
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 		writeError(w, "Component '%s' not found", name)
