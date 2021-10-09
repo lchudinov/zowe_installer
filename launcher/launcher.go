@@ -41,6 +41,7 @@ func New() *Launcher {
 	credentials := handlers.AllowCredentials()
 	methods := handlers.AllowedMethods([]string{"POST,GET,DELETE,PUT"})
 	origins := handlers.AllowedOrigins([]string{"*"})
+	launcher.output = NewBuffer()
 	launcher.Logger = log.New(launcher.output, "", 0)
 	launcher.Server = &http.Server{
 		Addr:    ":8053",
