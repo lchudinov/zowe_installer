@@ -2,7 +2,6 @@ package launcher
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -28,9 +27,10 @@ type Launcher struct {
 	components       map[string]*Component
 	wg               *sync.WaitGroup
 	env              []string
-	output           bytes.Buffer
+	output           *Buffer
+	router           *mux.Router
+	*log.Logger
 	*http.Server
-	router *mux.Router
 }
 
 func New() *Launcher {
@@ -41,6 +41,7 @@ func New() *Launcher {
 	credentials := handlers.AllowCredentials()
 	methods := handlers.AllowedMethods([]string{"POST,GET,DELETE,PUT"})
 	origins := handlers.AllowedOrigins([]string{"*"})
+	launcher.Logger = log.New(launcher.output, "", 0)
 	launcher.Server = &http.Server{
 		Addr:    ":8053",
 		Handler: handlers.CORS(credentials, methods, origins)(launcher.router),
@@ -51,6 +52,7 @@ func New() *Launcher {
 func (launcher *Launcher) makeRouter() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/components", launcher.handleComponents).Methods("GET")
+	router.HandleFunc("/log", launcher.handleLog).Methods("GET")
 	router.HandleFunc("/component/{comp}/log", launcher.handleComponentLog).Methods("GET")
 	router.HandleFunc("/component/{comp}/stop", launcher.handleComponentStop).Methods("POST")
 	router.HandleFunc("/component/{comp}/start", launcher.handleComponentStart).Methods("POST")
@@ -84,7 +86,7 @@ func (launcher *Launcher) Run(instanceDir string, haInstanceId string) error {
 
 func (launcher *Launcher) Wait() {
 	launcher.wg.Wait()
-	log.Printf("components stopped")
+	launcher.Printf("components stopped")
 }
 
 func (launcher *Launcher) findRootDir() error {
@@ -102,7 +104,7 @@ func (launcher *Launcher) findRootDir() error {
 		return errors.Wrapf(err, "failed to find ROOT_DIR %s", rootDir)
 	}
 	launcher.rootDir = rootDir
-	log.Printf("ROOT_DIR = %s\n", rootDir)
+	launcher.Printf("ROOT_DIR = %s\n", rootDir)
 	return nil
 }
 
@@ -127,12 +129,12 @@ func (launcher *Launcher) getLaunchComponents() error {
 	if len(launcher.launchComponents) == 0 {
 		return errors.New("no launch components")
 	}
-	log.Printf("LAUNCH COMPONENTS = %s", strings.Join(launcher.launchComponents, ","))
+	launcher.Printf("LAUNCH COMPONENTS = %s", strings.Join(launcher.launchComponents, ","))
 	return nil
 }
 
 func (launcher *Launcher) prepareInstance() error {
-	log.Printf("preparing instance...")
+	launcher.Printf("preparing instance...")
 	script := filepath.Join(launcher.rootDir, "bin", "internal", "prepare-instance.sh")
 	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId)
 	cmd.Env = launcher.env
@@ -142,7 +144,7 @@ func (launcher *Launcher) prepareInstance() error {
 	if err := cmd.Run(); err != nil {
 		return errors.Wrapf(err, "failed to run %s", script)
 	}
-	log.Printf("instance prepared")
+	launcher.Printf("instance prepared")
 	return nil
 }
 
@@ -166,7 +168,7 @@ func (launcher *Launcher) startComponents() error {
 }
 
 func (launcher *Launcher) startComponent(comp *Component) error {
-	log.Printf("starting component %s...", comp.Name)
+	launcher.Printf("starting component %s...", comp.Name)
 	script := filepath.Join(launcher.rootDir, "bin", "internal", "start-component.sh")
 	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId, "-o", comp.Name)
 	cmd.Env = launcher.env
@@ -178,12 +180,12 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 		return errors.Wrapf(err, "failed to run component %s", comp.Name)
 	}
 	comp.cmd = cmd
-	log.Printf("component %s started", comp.Name)
+	launcher.Printf("component %s started", comp.Name)
 	launcher.wg.Add(1)
 	go func() {
 		defer launcher.wg.Done()
 		if _, err := cmd.Process.Wait(); err != nil {
-			log.Printf("component stopped with error: %v", err)
+			launcher.Printf("component stopped with error: %v", err)
 		}
 	}()
 	return nil
@@ -191,7 +193,7 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 
 func (launcher *Launcher) stopComponent(comp *Component) error {
 	if comp.cmd != nil {
-		log.Printf("stopping component %s...", comp.Name)
+		launcher.Printf("stopping component %s...", comp.Name)
 		if err := kill(-comp.cmd.Process.Pid); err != nil {
 			return errors.Wrapf(err, "failed to kill component %s", comp.Name)
 		}
@@ -200,10 +202,10 @@ func (launcher *Launcher) stopComponent(comp *Component) error {
 }
 
 func (launcher *Launcher) StopComponents() {
-	log.Printf("stopping components...")
+	launcher.Printf("stopping components...")
 	for name, comp := range launcher.components {
 		if err := launcher.stopComponent(comp); err != nil {
-			log.Printf("failed to stop component %s: %v", name, err)
+			launcher.Printf("failed to stop component %s: %v", name, err)
 		}
 	}
 }
@@ -233,7 +235,7 @@ func (launcher *Launcher) handleComponentLog(w http.ResponseWriter, r *http.Requ
 			lines = append(lines, scanner.Text())
 		}
 		if err := scanner.Err(); err != nil {
-			log.Printf("error reading componet output, %v", err)
+			launcher.Printf("error reading componet output, %v", err)
 		}
 		data, _ := json.Marshal(lines)
 		w.Header().Set("Content-Type", "application/json")
@@ -269,6 +271,19 @@ func (launcher *Launcher) handleComponentStart(w http.ResponseWriter, r *http.Re
 		w.WriteHeader(http.StatusNotFound)
 		writeError(w, "Component '%s' not found", name)
 	}
+}
+func (launcher *Launcher) handleLog(w http.ResponseWriter, r *http.Request) {
+	var lines []string
+	scanner := bufio.NewScanner(strings.NewReader(launcher.output.String()))
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		launcher.Printf("error reading componet output, %v", err)
+	}
+	data, _ := json.Marshal(lines)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
 }
 
 func writeError(w http.ResponseWriter, format string, a ...interface{}) {
