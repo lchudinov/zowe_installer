@@ -19,6 +19,7 @@ export class ApiService {
 
   getLog(comp?: string):Observable<Log> {
     const url = this.baseURL + (comp ? `/component/${comp}` : '') + '/log';
+    console.log(`get logs ${url}`);
     return this.http.get<Log>(url);
   }
 }
