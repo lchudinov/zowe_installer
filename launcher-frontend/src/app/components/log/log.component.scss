@@ -1,0 +1,11 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 80rem;
+  height: 25rem;
+  overflow: scroll;
+}
+
+div {
+  display: flex;
+}

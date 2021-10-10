@@ -1,0 +1,10 @@
+:host {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+div {
+  display: flex;
+  min-width: 80rem;
+  min-height: 25rem;
+}

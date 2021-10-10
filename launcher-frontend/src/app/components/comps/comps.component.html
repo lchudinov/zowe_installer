@@ -1,0 +1,5 @@
+<div *ngFor="let comp of comps$ | async">
+  {{ comp.name }}
+  <app-log [comp]="comp.name"></app-log>
+</div>
+<app-log></app-log>
