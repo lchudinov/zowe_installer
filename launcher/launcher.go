@@ -187,6 +187,7 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 		} else {
 			launcher.Printf("component %s stopped", comp.Name)
 		}
+		comp.cmd = nil
 	}()
 	return nil
 }

@@ -11,5 +11,6 @@ func kill(pid int) error {
 func getSysProcAttr() *syscall.SysProcAttr {
 	var attr syscall.SysProcAttr
 	attr.Setpgid = true
+	attr.Pgid = 0
 	return &attr
 }
