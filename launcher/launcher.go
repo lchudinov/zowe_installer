@@ -195,7 +195,7 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 func (launcher *Launcher) stopComponent(comp *Component) error {
 	if comp.cmd != nil {
 		launcher.Printf("stopping component %s...", comp.Name)
-		if err := kill(-comp.cmd.Process.Pid); err != nil {
+		if err := comp.cmd.Process.Kill(); err != nil {
 			return errors.Wrapf(err, "failed to kill component %s", comp.Name)
 		}
 	}
