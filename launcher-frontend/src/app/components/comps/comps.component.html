@@ -1,5 +1,5 @@
 <div *ngFor="let comp of comps$ | async">
-  {{ comp.name }}
+  {{ comp.name }} <button (click)="start(comp)">Start</button> <button (click)="stop(comp)">Stop</button>
   <app-log [comp]="comp.name"></app-log>
 </div>
 <app-log></app-log>

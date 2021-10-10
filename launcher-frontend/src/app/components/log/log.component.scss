@@ -6,7 +6,7 @@
   margin-top: 8px;
   background-color: rgb(15, 15, 16);
   height: 30rem;
-  overflow: scroll;
+  overflow: auto;
 }
 .terminal::before {
   content: "\2022 \2022 \2022";
@@ -29,4 +29,5 @@
   padding: 0 1rem 1rem;
   margin: 0;
   overflow: auto;
+  min-height: 30rem;
 }

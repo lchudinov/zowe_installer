@@ -183,7 +183,9 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 	go func() {
 		defer launcher.wg.Done()
 		if _, err := cmd.Process.Wait(); err != nil {
-			launcher.Printf("component stopped with error: %v", err)
+			launcher.Printf("component %s stopped with error: %v", comp.Name, err)
+		} else {
+			launcher.Printf("component %s stopped", comp.Name)
 		}
 	}()
 	return nil

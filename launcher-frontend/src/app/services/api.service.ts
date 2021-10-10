@@ -22,4 +22,12 @@ export class ApiService {
     console.log(`get logs ${url}`);
     return this.http.get<Log>(url);
   }
+
+  stopComponent(name: string): Observable<void> {
+    return this.http.post<void>(`${this.baseURL}/component/${name}/stop`, null);
+  }
+
+  startComponent(name: string): Observable<void> {
+    return this.http.post<void>(`${this.baseURL}/component/${name}/start`, null);
+  }
 }
