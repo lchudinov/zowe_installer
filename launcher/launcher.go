@@ -140,8 +140,8 @@ func (launcher *Launcher) prepareInstance() error {
 	cmd := exec.Command(script, "-c", launcher.instanceDir, "-r", launcher.rootDir, "-i", launcher.haInstanceId)
 	cmd.Env = launcher.env
 	cmd.Dir = launcher.instanceDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = io.MultiWriter(os.Stdout, launcher.output)
+	cmd.Stderr = io.MultiWriter(os.Stderr, launcher.output)
 	if err := cmd.Run(); err != nil {
 		return errors.Wrapf(err, "failed to run %s", script)
 	}
@@ -158,9 +158,6 @@ func (launcher *Launcher) initComponents() error {
 
 func (launcher *Launcher) startComponents() error {
 	for name, comp := range launcher.components {
-		if name != "zss" && name != "app-server" {
-			continue
-		}
 		if err := launcher.startComponent(comp); err != nil {
 			return errors.Wrapf(err, "failed to start component %s", name)
 		}
