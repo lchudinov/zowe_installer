@@ -29,14 +29,14 @@ func main() {
 	instanceDir := os.Args[1]
 	haInstanceId := os.Args[2]
 	launcher := launcher.New()
-	if err := launcher.Run(instanceDir, haInstanceId); err != nil {
-		log.Fatalf("failed to run Zowe: %v", err)
-	}
-	setupInterrutHandler(launcher)
 	go func() {
 		if err := launcher.ListenAndServe(); err != nil {
 			log.Fatal(err)
 		}
 	}()
+	setupInterrutHandler(launcher)
+	if err := launcher.Run(instanceDir, haInstanceId); err != nil {
+		log.Fatalf("failed to run Zowe: %v", err)
+	}
 	launcher.Wait()
 }
