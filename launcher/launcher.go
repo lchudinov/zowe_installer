@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -195,7 +196,7 @@ func (launcher *Launcher) startComponent(comp *Component) error {
 func (launcher *Launcher) stopComponent(comp *Component) error {
 	if comp.cmd != nil {
 		launcher.Printf("stopping component %s...", comp.Name)
-		if err := comp.cmd.Process.Kill(); err != nil {
+		if err := comp.cmd.Process.Signal(syscall.SIGTERM); err != nil {
 			return errors.Wrapf(err, "failed to kill component %s", comp.Name)
 		}
 	}
