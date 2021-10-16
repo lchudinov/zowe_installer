@@ -1,5 +1,15 @@
 :host {
+  align-self: flex-start;
   display: flex;
   flex-wrap: wrap;
+  flex-direction: column;
+}
+
+div {
+  display: flex;
+  margin: 0 2rem;
+  a {
+    white-space: nowrap;
+  }
 }
 
