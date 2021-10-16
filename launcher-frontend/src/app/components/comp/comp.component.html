@@ -1,0 +1,4 @@
+<ng-container *ngIf="name">
+  <h2> {{ name }} <button (click)="start()">Start</button> <button (click)="stop()">Stop</button></h2>
+  <app-log [comp]="name"></app-log>
+</ng-container>

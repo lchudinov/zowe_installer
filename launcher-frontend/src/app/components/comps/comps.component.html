@@ -1,5 +1,3 @@
 <div *ngFor="let comp of comps$ | async">
-  {{ comp.name }} <button (click)="start(comp)">Start</button> <button (click)="stop(comp)">Stop</button>
-  <app-log [comp]="comp.name"></app-log>
+  <a [routerLink]="['/component', comp.name]"> {{ comp.name }}</a>
 </div>
-<app-log></app-log>
