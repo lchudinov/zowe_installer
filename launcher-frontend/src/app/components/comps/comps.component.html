@@ -1,9 +1,6 @@
 <mat-list>
   <h3 mat-subheader>Components</h3>
-  <mat-list-item *ngFor="let comp of comps$ | async; last as last">
-     <h4 mat-line>
-      <a [routerLink]="['/component', comp.name]"> {{ comp.name }} </a>
-     </h4>
-     <mat-divider [inset]="true" *ngIf="!last"></mat-divider>
-  </mat-list-item>
+    <a mat-list-item *ngFor="let comp of comps$ | async" [routerLink]="['/component', comp.name]">
+       {{ comp.name }}
+    </a>
 </mat-list>
