@@ -7,6 +7,7 @@ import { AppComponent } from './app.component';
 import { CompsComponent } from './components/comps/comps.component';
 import { LogComponent } from './components/log/log.component';
 import { CompComponent } from './components/comp/comp.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
@@ -19,6 +20,7 @@ import { CompComponent } from './components/comp/comp.component';
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
+    BrowserAnimationsModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
