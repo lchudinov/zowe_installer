@@ -20,7 +20,7 @@ export class ApiService {
 
   getLog(comp?: string):Observable<Log> {
     const url = this.baseURL + (comp ? `/component/${comp}` : '') + '/log';
-    return this.http.get<Log>(url).pipe(map(log => this.filterEscapeSeqs(log)));
+    return this.http.get<Log>(url);
   }
 
   stopComponent(name: string): Observable<void> {

@@ -233,7 +233,7 @@ func (launcher *Launcher) handleComponentLog(w http.ResponseWriter, r *http.Requ
 		var lines []string
 		scanner := bufio.NewScanner(strings.NewReader(comp.output.String()))
 		for scanner.Scan() {
-			line := strip(scanner.Text())
+			line := stripEscapeSeqs(scanner.Text())
 			lines = append(lines, line)
 		}
 		if err := scanner.Err(); err != nil {
@@ -278,7 +278,7 @@ func (launcher *Launcher) handleLog(w http.ResponseWriter, r *http.Request) {
 	var lines []string
 	scanner := bufio.NewScanner(strings.NewReader(launcher.output.String()))
 	for scanner.Scan() {
-		line := strip(scanner.Text())
+		line := stripEscapeSeqs(scanner.Text())
 		lines = append(lines, line)
 	}
 	if err := scanner.Err(); err != nil {
