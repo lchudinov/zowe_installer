@@ -233,7 +233,8 @@ func (launcher *Launcher) handleComponentLog(w http.ResponseWriter, r *http.Requ
 		var lines []string
 		scanner := bufio.NewScanner(strings.NewReader(comp.output.String()))
 		for scanner.Scan() {
-			lines = append(lines, scanner.Text())
+			line := strip(scanner.Text())
+			lines = append(lines, line)
 		}
 		if err := scanner.Err(); err != nil {
 			launcher.Printf("error reading componet output, %v", err)
@@ -277,7 +278,8 @@ func (launcher *Launcher) handleLog(w http.ResponseWriter, r *http.Request) {
 	var lines []string
 	scanner := bufio.NewScanner(strings.NewReader(launcher.output.String()))
 	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+		line := strip(scanner.Text())
+		lines = append(lines, line)
 	}
 	if err := scanner.Err(); err != nil {
 		launcher.Printf("error reading componet output, %v", err)
