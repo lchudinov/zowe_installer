@@ -231,7 +231,7 @@ func (launcher *Launcher) handleComponentLog(w http.ResponseWriter, r *http.Requ
 	name := vars["comp"]
 	var level LogLevel = LogLevelAny
 	var err error
-	if val, ok := vars["level"]; ok {
+	if val := r.FormValue("level"); val != "" {
 		if level, err = parseLogLevel(val); err != nil {
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			writeError(w, "Unknown log level '%s'", val)
