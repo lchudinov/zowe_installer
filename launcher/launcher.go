@@ -229,12 +229,24 @@ func (launcher *Launcher) handleComponents(w http.ResponseWriter, r *http.Reques
 func (launcher *Launcher) handleComponentLog(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["comp"]
+	var level LogLevel
+	var err error
+	if val, ok := vars["level"]; ok {
+		if level, err = parseLogLevel(val); err != nil {
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			writeError(w, "Unknown log level '%s'", val)
+			return
+		}
+	}
 	if comp, ok := launcher.components[name]; ok {
 		var lines []string
 		scanner := bufio.NewScanner(strings.NewReader(comp.output.String()))
 		for scanner.Scan() {
 			line := stripEscapeSeqs(scanner.Text())
-			lines = append(lines, line)
+			lineLevel := getLogLevel(line)
+			if lineLevel <= level {
+				lines = append(lines, line)
+			}
 		}
 		if err := scanner.Err(); err != nil {
 			launcher.Printf("error reading componet output, %v", err)

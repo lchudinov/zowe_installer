@@ -1,6 +1,7 @@
 package launcher
 
 import (
+	"fmt"
 	"regexp"
 )
 
@@ -14,8 +15,19 @@ const (
 	LogLevelAny
 )
 
+var stringLevels []string = []string{"Error", "Warning", "Info", "Debug", "Any"}
+
 func (l LogLevel) String() string {
-	return [...]string{"Error", "Warning", "Info", "Debug", "Any"}[l-1]
+	return stringLevels[l-1]
+}
+
+func parseLogLevel(level string) (LogLevel, error) {
+	for index, stringLevel := range stringLevels {
+		if level == stringLevel {
+			return LogLevel(index + 1), nil
+		}
+	}
+	return 0, fmt.Errorf("unknown log level: %s", level)
 }
 
 var loglevelRe *regexp.Regexp = regexp.MustCompile(`\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} <[^>]+> \w+ (\w+)`)
