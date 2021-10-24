@@ -19,16 +19,16 @@ export class ApiService {
   }
 
   getLog(comp?: string):Observable<Log> {
-    const url = this.baseURL + (comp ? `/component/${comp}` : '') + '/log';
+    const url = this.baseURL + (comp ? `/components/${comp}` : '') + '/log';
     return this.http.get<Log>(url);
   }
 
   stopComponent(name: string): Observable<void> {
-    return this.http.post<void>(`${this.baseURL}/component/${name}/stop`, null);
+    return this.http.post<void>(`${this.baseURL}/components/${name}/stop`, null);
   }
 
   startComponent(name: string): Observable<void> {
-    return this.http.post<void>(`${this.baseURL}/component/${name}/start`, null);
+    return this.http.post<void>(`${this.baseURL}/components/${name}/start`, null);
   }
 
   private filterEscapeSeqs(lines: string[]): string[] {
