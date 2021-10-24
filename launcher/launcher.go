@@ -229,7 +229,7 @@ func (launcher *Launcher) handleComponents(w http.ResponseWriter, r *http.Reques
 func (launcher *Launcher) handleComponentLog(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["comp"]
-	var level LogLevel
+	var level LogLevel = LogLevelAny
 	var err error
 	if val, ok := vars["level"]; ok {
 		if level, err = parseLogLevel(val); err != nil {
