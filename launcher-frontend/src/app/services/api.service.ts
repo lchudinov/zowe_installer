@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Comp, Log } from '../shared';
+import { Comp, Log, LogLevel } from '../shared';
 import { map } from 'rxjs/operators';
 
 @Injectable({
@@ -18,9 +18,12 @@ export class ApiService {
     return this.http.get<Comp[]>(`${this.baseURL}/components`);
   }
 
-  getLog(comp?: string):Observable<Log> {
-    const url = this.baseURL + (comp ? `/components/${comp}` : '') + '/log';
-    return this.http.get<Log>(url);
+  getLog(comp?: string, level?: LogLevel):Observable<Log> {
+    if (!level) {
+      level = 'Any';
+    }
+    const url = this.baseURL + (comp ? `/components/${comp}` : '') + `/log?level=${level}`;
+    return this.http.get<Log|null>(url).pipe(map(res => Array.isArray(res) ? res : []));
   }
 
   stopComponent(name: string): Observable<void> {

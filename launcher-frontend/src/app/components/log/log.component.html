@@ -1,3 +1,8 @@
+<mat-select [ngModel]="logLevel$ | async" (selectionChange)="onLevelChange($event.value)" class="log-level">
+  <mat-option *ngFor="let level of logLevels" [value]="level">
+    {{level}}
+  </mat-option>
+</mat-select>
 <div class="terminal">
   <pre>{{(lines$ | async)}}</pre>
 </div>

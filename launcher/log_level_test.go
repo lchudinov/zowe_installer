@@ -36,6 +36,11 @@ func Test_getLogLevel(t *testing.T) {
 			"hello world",
 			LogLevelAny,
 		},
+		{
+			"warn with ms",
+			"2021-10-24 14:30:03.059 <ZWEAAC1:InstanceLookupExecutor-Thread:459380> TS3105 WARN  (o.z.a.a.s.c.CachedProductFamilyService) ZWEAC705W The home page url for service IBMZOSMF was not transformed. Not able to select route for url of the service ibmzosmf. Original url used.",
+			LogLevelWarning,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

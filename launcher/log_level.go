@@ -30,14 +30,14 @@ func parseLogLevel(level string) (LogLevel, error) {
 	return 0, fmt.Errorf("unknown log level: %s", level)
 }
 
-var loglevelRe *regexp.Regexp = regexp.MustCompile(`\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} <[^>]+> \w+ (\w+)`)
+var loglevelRe *regexp.Regexp = regexp.MustCompile(`\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{3})* <[^>]+> \w+ (\w+)`)
 
 func getLogLevel(line string) LogLevel {
 	matches := loglevelRe.FindStringSubmatch(line)
-	if matches == nil || len(matches) == 1 {
+	if matches == nil || len(matches) < 3 {
 		return LogLevelAny
 	}
-	switch matches[1] {
+	switch matches[2] {
 	case "INFO":
 		return LogLevelInfo
 	case "ERROR":

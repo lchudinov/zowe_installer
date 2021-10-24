@@ -1,8 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { Observable, timer } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, timer } from 'rxjs';
+import { map, mapTo, switchMap, tap } from 'rxjs/operators';
 import { ApiService } from 'src/app/services/api.service';
-import { Log } from 'src/app/shared';
+import { LogLevel } from 'src/app/shared';
 
 @Component({
   selector: 'app-log',
@@ -13,15 +13,22 @@ export class LogComponent implements OnInit {
 
   @Input() comp?: string;
   lines$: Observable<string> | undefined;
+  logLevels: LogLevel[] = ['Error', 'Warning', 'Info', 'Debug', 'Any'];
+  logLevel$ = new BehaviorSubject<LogLevel>('Any');
 
   constructor(private api: ApiService) {
   }
 
   ngOnInit(): void {
-    this.lines$ = timer(0, 3000).pipe(
-      switchMap(() => this.api.getLog(this.comp)),
+    this.lines$ = this.logLevel$.pipe(
+      switchMap(level => timer(0, 3000).pipe(mapTo(level))),
+      switchMap(level => this.api.getLog(this.comp, level)),
       map(lines => lines.join('\n'))
     );
+  }
+
+  onLevelChange(level: LogLevel): void {
+    this.logLevel$.next(level);
   }
 
 }
