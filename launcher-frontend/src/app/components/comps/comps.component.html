@@ -1,6 +1,6 @@
 <mat-list>
   <h3 mat-subheader>Components</h3>
-    <a mat-list-item *ngFor="let comp of comps$ | async" [routerLink]="['/component', comp.name]">
+    <a mat-list-item *ngFor="let comp of comps$ | async" [routerLink]="['/components', comp.name]">
        {{ comp.name }}
     </a>
 </mat-list>
