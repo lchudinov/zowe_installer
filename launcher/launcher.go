@@ -57,6 +57,8 @@ func (launcher *Launcher) makeRouter() *mux.Router {
 	router.HandleFunc("/components/{comp}/log", launcher.handleComponentLog).Methods("GET")
 	router.HandleFunc("/components/{comp}/stop", launcher.handleComponentStop).Methods("POST")
 	router.HandleFunc("/components/{comp}/start", launcher.handleComponentStart).Methods("POST")
+	router.HandleFunc("/components/{comp}/start", launcher.handleComponentStart).Methods("POST")
+	addSpaHandler(router)
 	return router
 }
 

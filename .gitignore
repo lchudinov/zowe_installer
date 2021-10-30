@@ -2,3 +2,4 @@
 *.msi
 vendor
 pax
+cmd/spa
