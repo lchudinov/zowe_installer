@@ -53,5 +53,5 @@ func addSpaHandler(router *mux.Router) {
 	}
 	log.Printf("abs path is %s\n", absPath)
 	spa := spaHandler{staticPath: absPath, indexPath: "index.html"}
-	router.PathPrefix("/ui").Handler(spa)
+	router.PathPrefix("/").Handler(spa)
 }
