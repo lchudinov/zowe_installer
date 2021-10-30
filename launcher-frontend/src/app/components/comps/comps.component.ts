@@ -19,12 +19,4 @@ export class CompsComponent implements OnInit {
   ngOnInit(): void {
   }
 
-  start(comp: Comp): void {
-    this.api.startComponent(comp.name).subscribe();
-  }
-
-  stop(comp: Comp): void {
-    this.api.stopComponent(comp.name).subscribe();
-  }
-
 }

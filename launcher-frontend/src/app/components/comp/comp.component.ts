@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { ApiService } from 'src/app/services/api.service';
 
 @Component({
   selector: 'app-comp',
@@ -12,7 +13,8 @@ export class CompComponent implements OnInit {
   name: string | null = null;
 
   constructor(
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private api: ApiService,
   ) { }
 
   ngOnInit(): void {
@@ -20,11 +22,15 @@ export class CompComponent implements OnInit {
   }
 
   start(): void {
-
+    if (this.name) {
+      this.api.startComponent(this.name).subscribe(() => console.log(`start ${this.name}`));
+    }
   }
 
   stop(): void {
-
+    if (this.name) {
+      this.api.stopComponent(this.name).subscribe(() => console.log(`stop ${this.name}`));
+    }
   }
 
 }
