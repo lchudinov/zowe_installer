@@ -29,9 +29,17 @@ func main() {
 	instanceDir := os.Args[1]
 	haInstanceId := os.Args[2]
 	launcher := launcher.New()
+	keyFile := os.Getenv("KEYSTORE_KEY")
+	cerFile := os.Getenv("KEYSTORE_CERTIFICATE")
 	go func() {
-		if err := launcher.ListenAndServe(); err != nil {
-			log.Fatal(err)
+		if keyFile != "" && cerFile != "" {
+			if err := launcher.ListenAndServeTLS(cerFile, keyFile); err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			if err := launcher.ListenAndServe(); err != nil {
+				log.Fatal(err)
+			}
 		}
 	}()
 	setupInterrutHandler(launcher)
